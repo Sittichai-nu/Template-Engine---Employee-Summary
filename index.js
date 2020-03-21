@@ -1,119 +1,132 @@
 const inquirer = require("inquirer");
 const fs = require("fs");
 const util = require("util");
-const Employee = require("./lib/Employee");
+const Manager = require("./lib/Manager");
 const Engineer = require("./lib/Engineer");
 const Intern = require("./lib/Intern");
-const Manager = require("./lib/Manager");
+const html = require("./templates/htmltemplates");
+
+
+
 const writeFileAsync = util.promisify(fs.writeFile);
+const appendFileAsync = util.promisify(fs.appendFile);
 
-function promptUser() {
-    return inquirer.prompt([
-        {
-            type: "input",
-            name: "name",
-            message: "Enter your name"
-        },
-        {
-            type: "input",
-            name: "id",
-            message: "Enter your ID"
-        },
-        {
-            type: "input",
-            name: "email",
-            message: "Enter your email"
-        },
-        {
-            type: "list",
-            name: "title",
-            message: "Enter your job title",
-            choices: ["Manager", "Engineer", "Intern"]
-        }
-    ]);
+let teamArray = [];
+let teamstr = ``;
+
+//this calls all the functions in one in order
+async function main() {
+     try {
+          await prompt()
+          // for i to teamArray.length  => 
+
+          for (let i = 0; i < teamArray.length; i++) {
+               //template literal=``
+               teamstr = teamstr + html.generateCard(teamArray[i]);
+          }
+
+          let finalHTML = html.generateHTML(teamstr)
+
+          console.log(teamstr)
+
+          //call generate function to generate the html template literal
+
+          //write file 
+          writeFileAsync("./output/index.html", finalHTML)
+
+
+     } catch (err) {
+          return console.log(err);
+     }
+
 };
-function manager() {
-    return inquirer.prompt([{
-        type: "input",
-        message: "Enter office number",
-        name: "office number"
-    }]);
+
+async function prompt() {
+     let responseDone = "";
+     // prompt to collect input and use do while atleast one and do it number of times depending on the while condition
+     do {
+          try {
+               response = await inquirer.prompt([
+
+                    {
+                         type: "input",
+                         name: "name",
+                         message: "Enter name: "
+                    },
+                    {
+                         type: "input",
+                         name: "id",
+                         message: "Enter ID: "
+                    },
+                    {
+                         type: "input",
+                         name: "email",
+                         message: "Enter email address: "
+                    },
+                    {
+                         type: "list",
+                         name: "role",
+                         message: "Enter role:",
+                         choices: [
+                              "Engineer",
+                              "Intern",
+                              "Manager"
+                         ]
+                    }
+               ]);
+
+               let response2 = ""
+               // if else statement
+
+               if (response.role === "Engineer") {
+                    response2 = await inquirer.prompt([{
+                         type: "input",
+                         name: "x",
+                         message: "Enter Github:",
+                    }, ]);
+                    //store the object and push
+                    const engineer = new Engineer(response.name, response.id, response.email, response2.x);
+                    teamArray.push(engineer);
+               } else if (response.role === "Intern") {
+                    response2 = await inquirer.prompt([{
+                         type: "input",
+
+                         //the x is to only store into the team array
+                         name: "x",
+                         message: "Enter School?:",
+                    }, ]);
+                    //store the object and push
+                    const intern = new Intern(response.name, response.id, response.email, response2.x);
+                    teamArray.push(intern);
+               } else if (response.role === "Manager") {
+                    response2 = await inquirer.prompt([{
+                         type: "input",
+                         name: "x",
+                         message: "Enter office number?:",
+                    }, ]);
+                    //store the object and push
+                    const manager = new Manager(response.name, response.id, response.email, response2.x);
+                    teamArray.push(manager);
+               }
+          } catch (err) {
+               return console.log(err);
+          }
+          console.log(teamArray)
+          //need to prompt do you want to continue
+
+          responseDone = await inquirer.prompt([{
+               type: "list",
+               name: "finish",
+               message: "Do you want to continue?: ",
+               choices: [
+                    "Yes",
+                    "No"
+               ]
+          }, ]);
+
+          console.log(responseDone.choices);
+          //the while parameter is saying continue running the code if the user selects "yes"
+     } while (responseDone.finish === "Yes");
 }
-function engineer() {
-    return inquirer.prompt([{
-        type: "input",
-        message: "Enter office number",
-        name: "office number"
-    }]);
-}
-function intern() {
-    return inquirer.prompt([{
-        type: "input",
-        message: "Enter office number",
-        name: "office number"
-    }]);
-};
-
-
-function generateHTML(answers) {
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <link rel="stylesheet" href="style.css">
-
-  <title>Document</title>
-</head>
-<body>
-  <div class="jumbotron jumbotron-fluid">
-  <div class="team">My Team</div>
-  </div>
-  <div class="container">
-    <div class="card>
-    <h1 class="name">${answers.name}</h1>
-    <h2 class="lead">${answers.title}.</h2>
-    </div>
-    <ul class="list-group">
-      <li class="list-group-item">ID${answers.id}</li>
-      <li class="list-group-item">Email: ${answers.email}</li>
-      <li class="list-group-item">Office number: ${answers.officeNumber}</li>
-    </ul>
-    <div class="card>
-    <h1 class="name">${answers.name}</h1>
-    <h2 class="lead">${answers.title}.</h2>
-    </div>
-    <ul class="list-group">
-      <li class="list-group-item">ID${answers.id}</li>
-      <li class="list-group-item">Email:${answers.email}</li>
-      <li class="list-group-item">Git Hub:${answers.github}</li>
-    </ul>
-    <div class="card>
-    <h1 class="name">${answers.name}</h1>
-    <h2 class="lead">${answers.title}.</h2>
-    </div>
-    <ul class="list-group">
-      <li class="list-group-item">ID${answers.id}</li>
-      <li class="list-group-item">Email: ${answers.email}</li>
-      <li class="list-group-item">School: ${answers.school}</li>
-    </ul>
-  </div>
-
-</body>
-</html>`;
-};
-
-promptUser()
-    .then(function (answers) {
-        const html = generateHTML(answers);
-
-        return writeFileAsync("index.html", html);
-    })
-    .then(function () {
-        console.log("Successfully wrote to index.html");
-    })
-    .catch(function (err) {
-        console.log(err);
-    });
+//call function to run application on the server
+main();
